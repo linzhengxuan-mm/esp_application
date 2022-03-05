@@ -1,0 +1,16 @@
+menu "ESP-MODEM"
+
+    config ESP_MODEM_PPP_ENABLE
+        bool "Modem support ppp"
+        default n
+        help
+            Esp modem enable ppp.
+
+    config ESP_MODEM_COMPONENT_APN
+        string "Set Access Point Name (APN)"
+        default "CMNET"
+        depends on ESP_MODEM_PPP_ENABLE
+        help
+            Logical name which is used to select the GGSN or the external packet data network.
+
+endmenu
