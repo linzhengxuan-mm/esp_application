@@ -14,6 +14,12 @@
 #ifndef __PUB_DATATYPE_H__
 #define __PUB_DATATYPE_H__
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <time.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

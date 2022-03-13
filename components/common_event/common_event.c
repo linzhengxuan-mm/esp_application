@@ -50,13 +50,26 @@ esp_err_t common_event_post(int32_t event_id,void* event_data, size_t event_data
 }
 
 #if CONFIG_ESP_EVENT_POST_FROM_ISR
-esp_err_t common_event_isr_post(int32_t event_id,void* event_data, size_t event_data_size, BaseType_t* task_unblocked)
+esp_err_t common_event_isr_post(int32_t event_id,void* event_data, size_t event_data_size)
 {
+    BaseType_t high_task_wakeup = pdFALSE;
+	
     if (!common_event_loop_handle) 
 	{
         return ESP_FAIL;
     }
-    return esp_event_isr_post_to(common_event_loop_handle, COMMON_EVENT, event_id, event_data, event_data_size, task_unblocked);
+    if (esp_event_isr_post_to(common_event_loop_handle, COMMON_EVENT, event_id, event_data, event_data_size, &high_task_wakeup)==ESP_OK)
+    {
+		if (high_task_wakeup != pdFALSE) 
+		{
+			portYIELD_FROM_ISR();
+		}
+		return ESP_OK;
+	}
+	else
+	{
+        return ESP_FAIL;
+	}
 }
 #endif
 
@@ -67,7 +80,7 @@ esp_err_t create_common_event_loop(void)
 		.queue_size = 32,
 		.task_name = "common_event_loop",
 		.task_priority = uxTaskPriorityGet(NULL),
-		.task_stack_size = 2048,
+		.task_stack_size = 16384,
 		.task_core_id = tskNO_AFFINITY
 		};
 	return esp_event_loop_create(&common_event_loop_args, &common_event_loop_handle);

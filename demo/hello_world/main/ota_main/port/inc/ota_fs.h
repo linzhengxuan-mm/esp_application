@@ -184,12 +184,12 @@ INT32S FS_Seek(FS_HANDLE FileHandle, INT32S Offset, INT32S Whence);
 INT32S FS_CreateDir(const WCHAR * DirName);
 INT32S FS_GetFileSize(FS_HANDLE FileHandle, INT32U * Size);
 INT32S FS_GetFileSizeWithName(const WCHAR * FileName, INT32U * Size);
-INT32S FS_Truncate(FS_HANDLE FileHandle, const CHAR *FileName, INT32S file_size);
+INT32S FS_Truncate(const WCHAR *FileName, INT32S file_size);
 INT32S FS_SetAttributes(const WCHAR * FileName, INT8U Attributes);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-typedef FILE OTA_FIL;
+typedef FILE* OTA_FIL;
 
 typedef DIR OTA_DIR;
 
@@ -232,7 +232,6 @@ int ota_fread(OTA_FIL* fp, void* buff, unsigned int btr, unsigned int* br);
 int ota_fwrite(OTA_FIL* fp, const void* buff, unsigned int btw, unsigned int* bw);
 int ota_fsize(OTA_FIL* fp);
 int ota_flseek(OTA_FIL* fp, int ofs);
-int ota_ftruncate(OTA_FIL* fp);
 int ota_fsync(OTA_FIL* fp);
 int ota_fopendir(OTA_DIR* dp, const char* path);
 int ota_fclosedir(OTA_DIR* dp);
@@ -243,7 +242,8 @@ int ota_fmkdir(const char* path);
 int ota_funlink(const char* path);
 int ota_frename(const char* path_old, const char* path_new);
 int ota_fstat(const char* path, OTA_FILINFO* fno);
-bool ota_fexist(const char* path);
+int ota_ftruncate(const char* path,INT32S file_size);
+int ota_fexist(const char* path);
 
 
 #ifdef __cplusplus

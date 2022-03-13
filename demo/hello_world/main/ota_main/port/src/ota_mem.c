@@ -10,7 +10,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "sdkconfig.h"
-#include "esp_log.h"
+#include "ota_log.h"
 #include "ota_mem.h"
 
 void ota_mem_init(void)
@@ -34,7 +34,7 @@ void *ota_mem_alloc(INT32U s, INT8U v)
     void *memptr = NULL;
     if (s)
     {
-        memptr = calloc(1, s);
+        memptr = malloc(s);
         if (memptr)
         {
             if(v != '?')
@@ -65,7 +65,7 @@ void *ota_vfs_alloc(INT32U s)
     void *memptr = NULL;
     if (s)
     {
-        memptr = calloc(1, s);
+        memptr = malloc(s);
         if(memptr)
         {
             memset(memptr, 0 , s);

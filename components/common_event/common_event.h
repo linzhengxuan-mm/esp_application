@@ -24,7 +24,7 @@ esp_err_t common_event_register(int32_t event_id, esp_event_handler_t event_hand
 esp_err_t common_event_unregister(int32_t event_id, esp_event_handler_t event_handler);
 esp_err_t common_event_post(int32_t event_id,void* event_data, size_t event_data_size, TickType_t ticks_to_wait);
 #if CONFIG_ESP_EVENT_POST_FROM_ISR
-esp_err_t common_event_isr_post(int32_t event_id,void* event_data, size_t event_data_size, BaseType_t* task_unblocked);
+esp_err_t common_event_isr_post(int32_t event_id,void* event_data, size_t event_data_size);
 #endif
 
 #ifdef __cplusplus

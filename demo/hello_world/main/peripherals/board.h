@@ -19,6 +19,9 @@ extern "C" {
 #endif
 
 esp_err_t board_init(void);
+void board_lock_sleep(void);
+void board_unlock_sleep(void);
+void board_enter_deep_sleep(void);
 
 #ifdef __cplusplus
 }

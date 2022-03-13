@@ -23,8 +23,8 @@ typedef void (* task_common_cb_fun_t) (void *param,uint16_t param_len);
 
 typedef struct {
 	uint16_t msg_id;
-    void *param;
-    uint16_t param_len;
+	void *param;
+	uint16_t param_len;
 	task_common_cb_fun_t cb_fun;
 } task_common_msg_t;
 
@@ -66,6 +66,10 @@ typedef struct {
 	    if (xQueueReceive(q, &msg, portMAX_DELAY) == pdTRUE) \
 		{                                                    \
 			fun(&msg);                                       \
+			if (msg.param)									\
+			{ 												\
+				free(msg.param);  							\
+			}  												\
 	    }                                                    \
 	}
 
@@ -83,7 +87,7 @@ typedef struct {
 		msg.cb_fun = fun_cb;  \
 		if ((param)&&(parma_len>0)) \
 		{  \
-			msg.param = calloc(1, parma_len);  \
+			msg.param = malloc(parma_len);  \
 			if(msg.param)  \
 			{  \
 				memcpy(msg.param,param,parma_len);  \
@@ -91,7 +95,7 @@ typedef struct {
 			}  \
 			else \
 			{ \
-				ESP_LOGE(tag, "send msg fail,param calloc fail");\
+				ESP_LOGE(tag, "send msg fail,param malloc fail");\
 				return ESP_FAIL;  \
 			} \
 		} \
@@ -115,9 +119,9 @@ typedef struct {
 		if (ret != pdTRUE) \
 		{ \
 			ESP_LOGE(tag, "send msg fail");\
-			if (param)	\
+			if (msg.param)	\
 			{ \
-				free(param);  \
+				free(msg.param);  \
 			}  \
 			return ESP_FAIL; \
 		}\

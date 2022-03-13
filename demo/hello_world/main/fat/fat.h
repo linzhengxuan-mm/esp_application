@@ -25,6 +25,7 @@ void fat_calc_magic_number(bool is_true);
 int fat_mount(void);
 int fat_unmount(void);
 int fat_format(void);
+int fat_get_usage(size_t* total_bytes, size_t* free_bytes);
 #ifdef __cplusplus
 }
 #endif

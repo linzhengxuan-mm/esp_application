@@ -27,6 +27,12 @@ static void app_events_on_common_event(void *arg, esp_event_base_t event_base,
     ESP_LOGD(TAG, "app common event: %d", event_id);
 	switch(event_id)
 	{
+		case APP_EVENT_USB_PLUGIN:
+			ESP_LOGI(TAG, "usb plug in!");
+			break;
+		case APP_EVENT_USB_PLUGOUT:
+			ESP_LOGI(TAG, "usb plug out!");
+			break;
 		case APP_EVENT_SIM_READY:
 			ESP_LOGI(TAG, "sim ready!");
 			break;
@@ -46,6 +52,14 @@ static void app_events_on_common_event(void *arg, esp_event_base_t event_base,
 esp_err_t app_events_send(int32_t event_id,void* param, size_t param_size)
 {
 	return common_event_post(event_id,param,param_size,portMAX_DELAY);
+}
+esp_err_t app_events_isr_send(int32_t event_id,void* param, size_t param_size)
+{
+#if CONFIG_ESP_EVENT_POST_FROM_ISR
+	return common_event_isr_post(event_id,param,param_size);
+#else
+	return ESP_FAIL;
+#endif
 }
 void app_events_init(void)
 {

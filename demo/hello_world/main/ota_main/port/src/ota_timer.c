@@ -10,13 +10,10 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "sdkconfig.h"
-#include "esp_log.h"
-#include "esp_err.h"
 #include "esp_timer.h"
+#include "ota_log.h"
 #include "ota_mem.h"
 #include "ota_timer.h"
-
-static const char *TAG = "ota_timer";
 
 #define OTA_TIMER_INVALID_HANDLE NULL
 
@@ -118,7 +115,7 @@ static void ota_timer_default_cb(void *arg)
 
 	if (!handle)
 	{
-		ESP_LOGE(TAG,"ota_timer_default_cb invalid arg");
+		OTA_LOGE("invalid arg");
 		return;
 	}
 
@@ -131,12 +128,12 @@ static void ota_timer_default_cb(void *arg)
 		}
 		else
 		{
-			ESP_LOGW(TAG,"ota_timer_default_cb,no expiry_cb");
+			OTA_LOGE("no expiry_cb");
 		}
 	}
 	else
 	{
-		ESP_LOGE(TAG,"ota_timer_default_cb can not find timer id");
+		OTA_LOGE("can not find timer id");
 	}
 }
 inv_error_t ota_timer_start(INT32U tid, INT32U dly)
@@ -146,7 +143,7 @@ inv_error_t ota_timer_start(INT32U tid, INT32U dly)
 
     if((!timer_item)||(timer_item->handle==OTA_TIMER_INVALID_HANDLE))
     {
-		ESP_LOGE(TAG,"ota_timer_start,unavailable timer id [%d]",tid);
+		OTA_LOGE("unavailable timer id [%d]",tid);
         return -1;
     }
 
@@ -160,7 +157,7 @@ inv_error_t ota_timer_start(INT32U tid, INT32U dly)
 		ret = esp_timer_start_once(timer_item->handle,dly*1000);//us
 	}
 
-    ESP_LOGI(TAG,"[+TIMER:%d] status[%d] delay = %d", tid, ret, dly);
+    OTA_LOGD("[+TIMER:%d] status[%d] delay = %d", tid, ret, dly);
 	if (ret==ESP_OK)
 	{
     	timer_item->state = _TRUE;
@@ -168,7 +165,7 @@ inv_error_t ota_timer_start(INT32U tid, INT32U dly)
 	}
 	else
 	{
-		ESP_LOGE(TAG,"timer start fail, timer id [%d]", tid);
+		OTA_LOGE("timer id [%d]", tid);
 		return -1;
 	}
 }
@@ -180,12 +177,12 @@ inv_error_t ota_timer_stop(INT32U tid)
 
     if((!timer_item)||(timer_item->handle==OTA_TIMER_INVALID_HANDLE))
     {
-		ESP_LOGE(TAG,"ota_timer_stop,unavailable timer id [%d]", tid);
+		OTA_LOGE("unavailable timer id [%d]", tid);
         return -1;
     }
     ret = esp_timer_stop(timer_item->handle);
 	timer_item->state = _FALSE;
-    ESP_LOGI(TAG,"[-TIMER] status[%d]", tid);
+    OTA_LOGD("[-TIMER] status[%d]", tid);
 	return 0;
 }
 inv_error_t ota_timer_clear(INT32U tid)
@@ -194,7 +191,7 @@ inv_error_t ota_timer_clear(INT32U tid)
 
     if((!timer_item)||(timer_item->handle==OTA_TIMER_INVALID_HANDLE))
     {
-		ESP_LOGE(TAG,"ota_timer_clear,unavailable timer id [%d]", tid);
+		OTA_LOGE("unavailable timer id [%d]", tid);
         return -1;
     }
 	timer_item->state = _FALSE;
@@ -207,7 +204,7 @@ _BOOL ota_timer_running(INT32U tid)
 
     if((!timer_item)||(timer_item->handle==OTA_TIMER_INVALID_HANDLE))
     {
-		ESP_LOGE(TAG,"ota_timer_running,unavailable timer id [%d]", tid);
+		OTA_LOGE("unavailable timer id [%d]", tid);
         return _FALSE;
     }
     return timer_item->state;
@@ -239,11 +236,11 @@ inv_error_t ota_timer_init(INT32U reload_timer_base,
 	memset(&ota_timer_info_cntx,0x00,sizeof(ota_timer_info_cntx_t));
 	if ((timer_total_num== 0)||(once_timer_base<(reload_timer_base+reload_timer_count)))
 	{
-		ESP_LOGE(TAG,"ota timer total num zero");
+		OTA_LOGE("ota timer total num zero");
 		return -1;
 	}
 
-	ESP_LOGI(TAG,"timer_total_num:%d,reload_timer_count:%d,once_timer_count:%d",timer_total_num,reload_timer_count,once_timer_count);
+	OTA_LOGD("timer_total_num:%d,reload_timer_count:%d,once_timer_count:%d",timer_total_num,reload_timer_count,once_timer_count);
 	ota_timer_info_cntx.reload_timer_base= reload_timer_base;
 	ota_timer_info_cntx.reload_timer_count= reload_timer_count;
 	ota_timer_info_cntx.once_timer_base = once_timer_base;
@@ -253,7 +250,7 @@ inv_error_t ota_timer_init(INT32U reload_timer_base,
 	ota_timer_info_cntx.timer_table=(ota_timer_item_info_t*)ota_malloc(sizeof(ota_timer_item_info_t)*timer_total_num,0);
 	if(!ota_timer_info_cntx.timer_table)
 	{
-		ESP_LOGE(TAG,"ota timer table mem alloc fail");
+		OTA_LOGE("ota timer table mem alloc fail");
 		return -1;
 	}
 

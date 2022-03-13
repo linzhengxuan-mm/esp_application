@@ -23,11 +23,11 @@
 #include "esp_log.h"
 
 #include "esp_modem.h"
-#include "modem_board.h"
+//#include "modem_board.h"
 
 static const char *TAG = "network";
 
 void network_init(void)
 {
-	modem_board_init();
+	//modem_board_init();
 }

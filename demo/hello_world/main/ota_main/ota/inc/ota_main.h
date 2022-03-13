@@ -19,12 +19,17 @@ extern "C" {
 #endif
 
 #include "pub_datatype.h"
+#include "pub_enum.h"
 #include "ota_timer.h"
 #include "ota_mem.h"
 #include "ota_fs.h"
+#include "ota_log.h"
+#include "ota_system.h"
+#include "ota_modem.h"
 #include "sscanf.h"
 #include "vsnprintf.h"
 #include "ota_constant.h"
+#include "ota_msg.h"
 #include "ota_timer_handler.h"
 
 #define ota_sscanf          _ota_sscanf
@@ -32,6 +37,7 @@ extern "C" {
 #define ota_wsprintf        _ota_sprintf
 
 void ota_main_init(void);
+ota_err_t ota_main_thread_init(void);
 
 #ifdef __cplusplus
 }

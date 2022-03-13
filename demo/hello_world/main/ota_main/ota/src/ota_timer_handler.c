@@ -3,18 +3,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <stdlib.h>
-#include <string.h>
-#include <sys/param.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
-#include "sdkconfig.h"
-#include "esp_log.h"
-
-#include "ota_main.h"
-
-static const char *TAG = "ota_timer_handler";
+#include "pub_datatype.h"
+#include "ota_log.h"
+#include "ota_timer.h"
+#include "ota_timer_handler.h"
 
 void ota_timer_handler_callback(INT32U tid)
 {
@@ -31,7 +23,7 @@ void ota_timer_handler_callback(INT32U tid)
 			break;
 	}
 }
-void ota_timer_handler_init(void)
+ota_err_t ota_timer_handler_init(void)
 {
 	inv_error_t ret = -1;
 	
@@ -42,10 +34,11 @@ void ota_timer_handler_init(void)
 						ota_timer_handler_callback);
 	if(ret<0)
 	{
-		ESP_LOGE(TAG,"ota_timer_handler_init fail");
+		OTA_LOGE("init fail");
+		return OTA_FAIL;
 	}
 	else
 	{
-		ota_timer_start(TID_GT_MAIN_TIMER, OTA_TIMER_DELAY_MAIN);
+		return OTA_OK;
 	}
 }

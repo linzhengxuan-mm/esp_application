@@ -14,6 +14,9 @@
 #ifndef __OTA_TIMER_HANDLER_H__
 #define __OTA_TIMER_HANDLER_H__
 
+#include "pub_datatype.h"
+#include "pub_enum.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,9 +28,7 @@ enum custom_ota_timer_id {
 	//reload timer
 	TID_GT_TIMER_RELOAD_BASE,
     TID_GT_MAIN_TIMER=TID_GT_TIMER_RELOAD_BASE,
-
-	TID_GT_RELOAD_TEST_TIMER,
-
+    
 	//add reload timer above
 	TID_GT_TIMER_RELOAD_MAX,
 
@@ -214,7 +215,7 @@ enum custom_ota_timer_id {
 #define Min2Sec(min)    ((min)*60)
 #define Min2MSec(min)   (Sec2MSec(Min2Sec(min)))
 
-void ota_timer_handler_init(void);
+ota_err_t ota_timer_handler_init(void);
 
 #ifdef __cplusplus
 }

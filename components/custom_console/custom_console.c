@@ -17,6 +17,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_console.h"
+#include "esp_sleep.h"
+#include "driver/uart.h"
 #include "cmd_system.h"
 #include "cmd_wifi.h"
 #include "cmd_nvs.h"
@@ -41,6 +43,10 @@ void custom_console_init(void)
 #if CONFIG_ESP_CONSOLE_UART
 	esp_console_dev_uart_config_t uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
+	#if CONFIG_PM_ENABLE
+	ESP_ERROR_CHECK(uart_set_wakeup_threshold(uart_config.channel, 3));
+	ESP_ERROR_CHECK(esp_sleep_enable_uart_wakeup(uart_config.channel));
+	#endif
 #elif CONFIG_ESP_CONSOLE_USB_CDC
 	esp_console_dev_usb_cdc_config_t cdc_config = ESP_CONSOLE_DEV_CDC_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_console_new_repl_usb_cdc(&cdc_config, &repl_config, &repl));

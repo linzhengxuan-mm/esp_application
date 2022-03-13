@@ -16,17 +16,14 @@
 #include <utime.h>
 #include "dirent.h"
 #include "unity.h"
-#include "esp_log.h"
-#include "esp_err.h"
-#include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
+#include "esp_system.h"
 
 #include "fat.h"
+#include "ota_log.h"
 #include "ota_fs.h"
-
-static const char *TAG = "ota_fs";
 
 static WCHAR * _Construct_FileName(const WCHAR * FileName,const WCHAR * BasePath)
 {
@@ -37,7 +34,7 @@ static WCHAR * _Construct_FileName(const WCHAR * FileName,const WCHAR * BasePath
 	{
 		len = strlen(FileName)+strlen(BasePath)+1;
 
-		ConFileName = (WCHAR *)calloc(1, len);
+		ConFileName = (WCHAR *)malloc(len);
 		if(ConFileName)
 		{
 			memset(ConFileName,0x00,len);
@@ -71,7 +68,7 @@ static int _EmptyDir(char *destDir)
     struct stat statbuf;  
     if ((dp = opendir(destDir)) == NULL)  
     {  
-		ESP_LOGE(TAG,"cannot open directory: %s\n", destDir);
+		//OTA_LOGE("cannot open directory: %s\n", destDir);
 		return -1;  
     }  
     while ((entry = readdir(dp)) != NULL)  
@@ -93,10 +90,10 @@ static int _EmptyDir(char *destDir)
         }
 		else
 		{
-			ESP_LOGE(TAG,"invalid file type");
+			OTA_LOGE("invalid file type");
 		}
     }
-	closedir(destDir);
+	closedir(dp);
     return 0;
 }  
 
@@ -108,7 +105,7 @@ FS_HANDLE FS_Open(const WCHAR * FileName, INT32U Flag)
 
 	if (NULL==file_name)
 	{
-		ESP_LOGE(TAG,"FS_Open,invalid file name!");
+		OTA_LOGE("invalid file name!");
 		return NULL;
 	}
 	
@@ -121,13 +118,13 @@ FS_HANDLE FS_Open(const WCHAR * FileName, INT32U Flag)
 			fd = fopen(file_name,"wb");
 			if (fd == FS_FILE_INVALID_HANDLE) 
 			{
-				ESP_LOGE(TAG,"fopen,file create error[%s]!",strerror(errno));
+				OTA_LOGE("file create error[%s]!",strerror(errno));
 				goto error;
 			}
 		}
 		else
 		{
-			ESP_LOGI(TAG,"FS_Open,file exist");
+			OTA_LOGI("file exist");
 		}
 		fclose(fd);
 	}
@@ -148,7 +145,7 @@ FS_HANDLE FS_Open(const WCHAR * FileName, INT32U Flag)
     fd = fopen(file_name,mode);
     if (fd == FS_FILE_INVALID_HANDLE) 
 	{
-		ESP_LOGE(TAG,"fopen,error[%s]!",strerror(errno));
+		OTA_LOGE("error[%s]!",strerror(errno));
 		goto error;
     }
 	else
@@ -182,7 +179,7 @@ INT32S FS_Close(FS_HANDLE FileHandle)
 	    ret = fclose(FileHandle);
 		if (ret < 0)
 		{
-			ESP_LOGE(TAG,"fclose,error[%s]!",strerror(errno));
+			OTA_LOGE("error[%s]!",strerror(errno));
 		}
 		return ret;
 	}
@@ -204,12 +201,12 @@ INT32S FS_Delete(const WCHAR * FileName)
 			ret = remove(file_name);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"remove,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		else
 		{
-			ESP_LOGE(TAG,"FS_Delete,%s,not exist",file_name);
+			OTA_LOGE("%s,not exist",file_name);
 		}
 		_Deconstruct_FileName(file_name);
 		return ret;
@@ -301,12 +298,12 @@ INT32S FS_Stat(const WCHAR * FileName, FS_STAT *pstat)
 			ret = stat(file_name,pstat);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"stat,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		else
 		{
-			ESP_LOGE(TAG,"FS_Stat,%s,not exist",file_name);
+			OTA_LOGE("%s,not exist",file_name);
 		}
 		_Deconstruct_FileName(file_name);
 		return ret;
@@ -330,12 +327,12 @@ INT32S FS_RemoveDir(const WCHAR * DirName)
 			ret = rmdir(dir_name);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"rmdir,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		else
 		{
-			ESP_LOGE(TAG,"FS_RemoveDir,%s,not exist",dir_name);
+			OTA_LOGE("%s,not exist",dir_name);
 		}
 		_Deconstruct_FileName(dir_name);
 		return ret;
@@ -358,12 +355,12 @@ INT32S FS_Rename(const WCHAR * FileName, const WCHAR * NewName)
 			ret = rename(file_name, file_new_name);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"rename,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		else
 		{
-			ESP_LOGE(TAG,"FS_Rename,%s,not exist",file_name);
+			OTA_LOGE("%s,not exist",file_name);
 		}
 	}
 	_Deconstruct_FileName(file_name);
@@ -399,7 +396,7 @@ INT32S FS_CreateDir(const WCHAR * DirName)
 			else
 			{
 				fat_calc_magic_number(false);
-				ESP_LOGE(TAG,"mkdir,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		_Deconstruct_FileName(dir_name);
@@ -447,9 +444,23 @@ INT32S FS_GetFileSizeWithName(const WCHAR * FileName, INT32U * Size)
 	_Deconstruct_FileName(file_name);
 	return ret;
 }
-INT32S FS_Truncate(FS_HANDLE FileHandle, const CHAR *FileName, INT32S file_size)
+INT32S FS_Truncate(const WCHAR *FileName, INT32S file_size)
 {
-	return -1;
+	INT32S ret=-1;
+	WCHAR *file_name = _Construct_FileName(FileName,MOUNT_PATH);
+
+	if(NULL==file_name)
+	{
+		return -1;
+	}
+	
+	ret = truncate(file_name, file_size);
+	if (ret < 0)
+	{
+		OTA_LOGE("error[%s]!",strerror(errno));
+	}
+	_Deconstruct_FileName(file_name);
+	return ret;
 }
 INT32S FS_SetAttributes(const WCHAR * FileName, INT8U Attributes)
 {
@@ -460,23 +471,57 @@ INT32S FS_SetAttributes(const WCHAR * FileName, INT8U Attributes)
 
 int ota_fs_mount(void)
 {
-	return fat_mount();
+	if (fat_mount()<0)
+	{
+		fat_unmount();
+		if (fat_mount()<0)
+		{
+			return OTA_FS_ERROR_MOUNT;
+		}
+		else
+		{
+			return OTA_FS_STATE_OK;
+		}
+	}
+
+	return OTA_FS_STATE_OK;
 }
 int ota_fs_format(void)
 {
-	return -1;
+    if (fat_format()==0)
+    {
+		fat_unmount();
+		if (fat_mount()<0)
+		{
+			return OTA_FS_ERROR_MOUNT;
+		}
+		else
+		{
+			return OTA_FS_STATE_OK;
+		}
+	}
+	else
+	{
+		return OTA_FS_ERROR_FORMAT;
+	}
 }
 int ota_fs_unmount(void)
 {
-	return -1;
+	return fat_unmount();
 }
 int ota_fs_usage(void)
 {
-	return -1;
+    size_t out_total_bytes, out_free_bytes;
+	
+	fat_get_usage(&out_total_bytes,&out_free_bytes);
+	return out_total_bytes;
 }
 int ota_fs_freespace(void)
 {
-	return -1;
+    size_t out_total_bytes, out_free_bytes;
+	
+	fat_get_usage(&out_total_bytes,&out_free_bytes);
+	return out_free_bytes;
 }
 int ota_fs_chipname(char *name)
 {
@@ -498,32 +543,32 @@ int ota_fformat(void)
 int ota_fopen(OTA_FIL* fp, const char* path, unsigned int mode)
 {
 	CHAR mode_string[8];
-	WCHAR *file_name = _Construct_FileName(path,MOUNT_PATH);
+	char *file_name = _Construct_FileName(path,MOUNT_PATH);
 
 	if (NULL==file_name)
 	{
-		ESP_LOGE(TAG,"ota_fopen,invalid file name!");
+		OTA_LOGE("invalid file name!");
 		return -1;
 	}
 	
 	memset(mode_string,0x00,sizeof(mode_string));
 	if (mode&FS_O_CREAT_E)
 	{
-		fp = fopen(file_name,"rb");
-		if (fp == NULL) 
+		*fp = fopen(file_name,"rb");
+		if (*fp == NULL) 
 		{
-			fp = fopen(file_name,"wb");
-			if (fp == NULL) 
+			*fp = fopen(file_name,"wb");
+			if (*fp == NULL) 
 			{
-				ESP_LOGE(TAG,"ota_fopen,file create error[%s]!",strerror(errno));
+				OTA_LOGE("file create error[%s]!",strerror(errno));
 				goto error;
 			}
 		}
 		else
 		{
-			ESP_LOGI(TAG,"ota_fopen,file exist");
+			OTA_LOGI("file exist");
 		}
-		fclose(fp);
+		fclose(*fp);
 	}
 
 	if (mode&FS_O_RDONLY_E)
@@ -539,26 +584,26 @@ int ota_fopen(OTA_FIL* fp, const char* path, unsigned int mode)
 		strcpy(mode_string,"rb+");
 	}
 
-	fp = fopen(file_name,mode_string);
-	if (fp== NULL) 
+	*fp = fopen(file_name,mode_string);
+	if (*fp== NULL) 
 	{
-		ESP_LOGE(TAG,"ota_fopen,error[%s]!",strerror(errno));
+		OTA_LOGE("error[%s]!",strerror(errno));
 		goto error;
 	}
 	else
 	{
 		if (mode&FS_O_RDONLY_E)
 		{
-			fseek(fp, 0, SEEK_SET);
+			fseek(*fp, 0, SEEK_SET);
 		}
 		else
 		{
-			fseek(fp, 0, SEEK_END);
+			fseek(*fp, 0, SEEK_END);
 		}
 	}
 error:
 	_Deconstruct_FileName(file_name);
-	if(fp!=NULL)
+	if(*fp!=NULL)
 	{
 		fat_calc_magic_number(true);
 		return 0;
@@ -574,12 +619,12 @@ int ota_fclose(OTA_FIL* fp)
 {
 	int ret=-1;
 	
-	if (fp!=NULL)
+	if (*fp!=NULL)
 	{
-		ret = fclose(fp);
+		ret = fclose(*fp);
 		if (ret < 0)
 		{
-			ESP_LOGE(TAG,"ota_fclose,error[%s]!",strerror(errno));
+			OTA_LOGE("error[%s]!",strerror(errno));
 		}
 	}
 	
@@ -590,12 +635,12 @@ int ota_fread(OTA_FIL* fp, void* buff, unsigned int btr, unsigned int* br)
 {
 	int readlen = 0;
 
-	if ((fp==NULL)||(buff==NULL))
+	if ((*fp==NULL)||(buff==NULL))
 	{
 		return -1;
 	}
 	
-	readlen = fread(buff,1,btr,fp);
+	readlen = fread(buff,1,btr,*fp);
     if(readlen >= 0)
     {
         if(br)
@@ -606,7 +651,7 @@ int ota_fread(OTA_FIL* fp, void* buff, unsigned int btr, unsigned int* br)
     }
 	else
 	{
-		ESP_LOGE(TAG,"ota_fread,error[%s]!",strerror(errno));
+		OTA_LOGE("error[%s]!",strerror(errno));
 		return -1;
 	}
 }
@@ -614,12 +659,12 @@ int ota_fwrite(OTA_FIL* fp, const void* buff, unsigned int btw, unsigned int* bw
 {
 	int writelen = 0;
 
-	if ((fp==NULL)||(buff==NULL))
+	if ((*fp==NULL)||(buff==NULL))
 	{
 		return -1;
 	}
 
-	writelen = fwrite(buff,1,btw,fp);
+	writelen = fwrite(buff,1,btw,*fp);
     if(writelen >= 0)
     {
         if(bw) 
@@ -630,16 +675,16 @@ int ota_fwrite(OTA_FIL* fp, const void* buff, unsigned int btw, unsigned int* bw
     }
 	else
 	{
-		ESP_LOGE(TAG,"ota_fwrite,error[%s]!",strerror(errno));
+		OTA_LOGE("error[%s]!",strerror(errno));
         return -1;
 	}
 }
 int ota_fsize(OTA_FIL* fp)
 {	
-	if (fp!=NULL)
+	if (*fp!=NULL)
 	{
-		fseek(fp, 0, SEEK_END);
-		return ftell(fp);
+		fseek(*fp, 0, SEEK_END);
+		return ftell(*fp);
 	}
 	else
 	{
@@ -648,26 +693,29 @@ int ota_fsize(OTA_FIL* fp)
 }
 int ota_flseek(OTA_FIL* fp, int ofs)
 {
-	if (fp!=NULL)
+	if (*fp!=NULL)
 	{
-		return fseek(fp, ofs, SEEK_SET);
+		return fseek(*fp, ofs, SEEK_SET);
 	}
 	else
 	{
 		return -1;
 	}
 }
-int ota_ftruncate(OTA_FIL* fp)
+int ota_ftruncate(const char* path,INT32S file_size)
 {
-	if (fp!=NULL)
+	INT32S ret=-1;
+	char *file_name = _Construct_FileName(path,MOUNT_PATH);
+	
+	ret = truncate(file_name, file_size);
+	if (ret < 0)
 	{
-		return ftruncate(fileno(fp), ftell(fp));
+		OTA_LOGE("error[%s]!",strerror(errno));
 	}
-	else
-	{
-		return -1;
-	}
+	_Deconstruct_FileName(file_name);
+	return ret;
 }
+
 int ota_fsync(OTA_FIL* fp)
 {
     //return lfs_file_sync(&m_tft_lfs, fp);
@@ -675,15 +723,22 @@ int ota_fsync(OTA_FIL* fp)
 }
 int ota_fopendir(OTA_DIR* dp, const char* path)
 {
-    dp = opendir(path);
-	if (dp!=NULL)
-	{
-		return 0;
-	}
-	else
+	int ret=-1;
+	char *dir_name = _Construct_FileName(path,MOUNT_PATH);
+
+	if(NULL == dir_name)
 	{
 		return -1;
 	}
+	
+    dp = opendir(dir_name);
+	if (dp!=NULL)
+	{
+		ret=0;
+	}
+
+	_Deconstruct_FileName(dir_name);
+	return ret;
 }
 int ota_fclosedir(OTA_DIR* dp)
 {
@@ -721,7 +776,7 @@ int ota_fnextdir(OTA_DIR* dp)
 int ota_fmkdir(const char* path)
 {
 	int ret=-1;
-	WCHAR *dir_name = _Construct_FileName(path,MOUNT_PATH);
+	char *dir_name = _Construct_FileName(path,MOUNT_PATH);
 
 	if(dir_name)
 	{
@@ -736,7 +791,7 @@ int ota_fmkdir(const char* path)
 			else
 			{
 				fat_calc_magic_number(false);
-				ESP_LOGE(TAG,"ota_fmkdir,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		_Deconstruct_FileName(dir_name);
@@ -747,29 +802,36 @@ int ota_fmkdir(const char* path)
 		return -1;
 	}
 }
-
 int ota_funlink(const char* path)
 {
 	INT32S ret=-1;
-	WCHAR *file_name = _Construct_FileName(path,MOUNT_PATH);
+	char *file_name = _Construct_FileName(path,MOUNT_PATH);
 
 	if (file_name)
 	{
-		ret = access(file_name,F_OK);
-		if (ret!=-1)
+		if (_EmptyDir(file_name)<0)
 		{
-			ret = remove(file_name);
-			if (ret < 0)
+			ret = access(file_name,F_OK);
+			if (ret!=-1)
 			{
-				ESP_LOGE(TAG,"ota_funlink,error[%s]!",strerror(errno));
+				ret = remove(file_name);
+				if (ret < 0)
+				{
+					OTA_LOGE("error[%s]!",strerror(errno));
+				}
 			}
+			else
+			{
+				OTA_LOGE("%s,not exist",file_name);
+			}
+			_Deconstruct_FileName(file_name);
+			return ret;
 		}
 		else
 		{
-			ESP_LOGE(TAG,"ota_funlink,%s,not exist",file_name);
+			_Deconstruct_FileName(file_name);
+			return 0;
 		}
-		_Deconstruct_FileName(file_name);
-		return ret;
 	}
 	else
 	{
@@ -780,8 +842,8 @@ int ota_funlink(const char* path)
 int ota_frename(const char* path_old, const char* path_new)
 {
 	int ret=-1;
-	WCHAR *file_name = _Construct_FileName(path_old,MOUNT_PATH);
-	WCHAR *file_new_name = _Construct_FileName(path_new,MOUNT_PATH);
+	char *file_name = _Construct_FileName(path_old,MOUNT_PATH);
+	char *file_new_name = _Construct_FileName(path_new,MOUNT_PATH);
 
 	if((file_name)&&(file_new_name))
 	{
@@ -790,12 +852,12 @@ int ota_frename(const char* path_old, const char* path_new)
 			ret = rename(file_name, file_new_name);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"ota_frename,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 		}
 		else
 		{
-			ESP_LOGE(TAG,"ota_frename,%s,not exist",file_name);
+			OTA_LOGE("%s,not exist",file_name);
 		}
 	}
 	_Deconstruct_FileName(file_name);
@@ -807,7 +869,7 @@ int ota_fstat(const char* path, OTA_FILINFO* fno)
 {
 	INT32S ret=-1;
     struct stat statbuf;  
-	WCHAR *file_name = _Construct_FileName(path,MOUNT_PATH);
+	char *file_name = _Construct_FileName(path,MOUNT_PATH);
 	
 	if (file_name)
 	{
@@ -817,7 +879,7 @@ int ota_fstat(const char* path, OTA_FILINFO* fno)
 			ret = stat(file_name, &statbuf);
 			if (ret < 0)
 			{
-				ESP_LOGE(TAG,"ota_fstat,error[%s]!",strerror(errno));
+				OTA_LOGE("error[%s]!",strerror(errno));
 			}
 
 			if(fno)
@@ -828,7 +890,7 @@ int ota_fstat(const char* path, OTA_FILINFO* fno)
 		}
 		else
 		{
-			ESP_LOGE(TAG,"ota_fstat,%s,not exist",file_name);
+			OTA_LOGE("%s,not exist",file_name);
 		}
 		_Deconstruct_FileName(file_name);
 		return ret;
@@ -838,10 +900,10 @@ int ota_fstat(const char* path, OTA_FILINFO* fno)
 		return -1;
 	}
 }
-bool ota_fexist(const char* path)
+int ota_fexist(const char* path)
 {
 	INT32S ret=-1;
-	WCHAR *file_name = _Construct_FileName(path,MOUNT_PATH);
+	char *file_name = _Construct_FileName(path,MOUNT_PATH);
 
 	if(access(file_name,F_OK)!=-1)
 	{

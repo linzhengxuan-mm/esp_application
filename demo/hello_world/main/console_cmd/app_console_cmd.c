@@ -142,10 +142,11 @@ static int app_console_modem_cmd_handle(void **arg,uint16_t argc)
 	strcat(modem_cmd,"\r\n");
 	ESP_LOGI(TAG,"[MODEM]cmd is %s",modem_cmd);
 
+	/*
 	if (modem_board_send_cmd(modem_cmd,1000,custom_console_cmd_reply)!=ESP_OK)
 	{
 		custom_console_cmd_reply("ERROR");
-	}
+	}*/
 	return 0;
 }
 
@@ -212,10 +213,10 @@ static int app_console_cmd_process(const char *cmd_str)
 	}
 	len = strlen(cmd_str);
 	len++;
-	pData = (char*)calloc(1, len);
+	pData = (char*)malloc(len);
 	if (!pData)
 	{
-		ESP_LOGE(TAG,"calloc memory fail");
+		ESP_LOGE(TAG,"malloc memory fail");
 		goto error;
 	}
 	memset(pData,0x00,len);

@@ -149,7 +149,15 @@ int fat_unmount(void)
 {
 	if (fat_wl_handle!=WL_INVALID_HANDLE)
 	{
-		return fat_unmount_internal(MOUNT_PATH,fat_wl_handle);
+		if (fat_unmount_internal(MOUNT_PATH,fat_wl_handle)<0)
+		{
+			return -1;
+		}
+		else
+		{
+			fat_wl_handle = WL_INVALID_HANDLE;
+			return 0;
+		}
 	}
 	else
 	{
@@ -189,4 +197,30 @@ int fat_format(void)
 fail:
 	free(workbuf);
 	return -1;
+}
+int fat_get_usage(size_t* total_bytes, size_t* free_bytes)
+{
+    size_t out_total_bytes, out_free_bytes;
+	
+	if (fat_wl_handle!=WL_INVALID_HANDLE)
+	{
+		if(fat_get_usage_internal(fat_wl_handle,&out_total_bytes,&out_free_bytes)!=-1)
+		{
+			*total_bytes = out_total_bytes;
+			*free_bytes = out_free_bytes;
+			return 0;
+		}
+		else
+		{
+			*total_bytes = 0;
+			*free_bytes = 0;
+			return -1;
+		}
+	}
+	else
+	{
+		*total_bytes = 0;
+		*free_bytes = 0;
+		return -1;
+	}
 }

@@ -20,6 +20,8 @@ extern "C" {
  */
 typedef enum {
     APP_EVENT_ANY = ESP_EVENT_ANY_ID,      /*!< app any event */
+	APP_EVENT_USB_PLUGIN,
+	APP_EVENT_USB_PLUGOUT,
 	APP_EVENT_SIM_READY,
 	APP_EVENT_SIM_NO_READY,
 	APP_EVENT_NW_REG,
@@ -29,6 +31,7 @@ typedef enum {
 
 void app_events_init(void);
 esp_err_t app_events_send(int32_t event_id,void* param, size_t param_size);
+esp_err_t app_events_isr_send(int32_t event_id,void* param, size_t param_size);
 
 #ifdef __cplusplus
 }

@@ -483,11 +483,6 @@ static void modem_board_message_dispatch(task_common_msg_t*msg)
 		default:
 			break;
 	}
-
-	if (msg->param)
-	{
-		free(msg->param);
-	}
 }
 static void modem_board_task(void *param)
 {
